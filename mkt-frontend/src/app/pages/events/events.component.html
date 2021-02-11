@@ -1,0 +1,187 @@
+<app-header></app-header>
+<!-- Page content -->
+<div class="container-fluid mt--7">
+  <!-- Table -->
+  <div class="row">
+    <div class="col">
+      <div class="card shadow">
+        <div class="card-header border-0">
+          <div class="row align-items-center">
+            <div class="col-8">
+              <h3 class="mb-0">Event List</h3>
+            </div>
+            <div class="col-4 text-right">
+              <button type="button" (click)="open(content)" class="btn btn-sm btn-primary">New</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-items-center table-flush">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Status</th>
+                <th scope="col">Completion</th>
+                <th scope="col">Operators</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let event of events; index as i;">
+                <td>{{event.id}}</td>
+                <td>{{event.eventName}}</td>
+                <td>{{event.status}}</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="mr-2">{{event.completion}}%</span>
+                    <div>
+                      <div class="progress">
+                        <div class="progress-bar bg-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" [ngStyle]="{'width': event.completion + '%'}"></div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="avatar-group">
+                    <a href="javascript:void(0)" class="avatar avatar-sm" data-toggle="tooltip" data-original-title="Ryan Tompson">
+                      <img alt="Image placeholder" src="../assets/img/user/{{event.creator}}.png" class="rounded-circle">
+                    </a>
+                    <a *ngIf="event.auditor" href="javascript:void(0)" class="avatar avatar-sm" data-toggle="tooltip" data-original-title="Romina Hadid">
+                      <img alt="Image placeholder" src="../assets/img/user/{{event.auditor}}.png" class="rounded-circle">
+                    </a>
+                    <a *ngIf="event.itAuditor" href="javascript:void(0)" class="avatar avatar-sm" data-toggle="tooltip" data-original-title="Alexander Smith">
+                      <img alt="Image placeholder" src="../assets/img/user/{{event.itAuditor}}.png" class="rounded-circle">
+                    </a>
+                  </div>
+                </td>
+                <td class="text-right">
+                  <div ngbDropdown placement="bottom-right">
+                    <a class="btn btn-sm btn-icon-only text-light"  ngbDropdownToggle>
+                      <i class="fas fa-ellipsis-v"></i>
+                    </a>
+                    <div ngbDropdownMenu class=" dropdown-menu-right dropdown-menu-arrow">
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="openView(view, event.eventName, event.frequency, event.frequencyType)">View</a>
+                      <a class="dropdown-item" href="javascript:void(0)" (click)="openView(view, event.eventName, event.frequency, event.frequencyType)">Edit</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer py-4">
+          <nav aria-label="...">
+            <ul class="pagination justify-content-end mb-0">
+              <li *ngIf="currentPageNum+1 > 1" class="page-item">
+                <a class="page-link" (click)="prePage()" tabindex="-1">
+                  <i class="fas fa-angle-left"></i>
+                  <span class="sr-only">Previous</span>
+                </a>
+              </li>
+              <ng-container *ngFor="let i of Arr(totalPageNum).fill(1); index as n">
+                <ng-container *ngIf="(currentPageNum + 5 > n && currentPageNum - n < 5)">
+                  <li class="page-item" [ngClass]="currentPageNum == n ? 'active' : ''">
+                    <a class="page-link" (click)="gotoPage(n)">{{n+1}}</a>
+                  </li>
+                </ng-container>
+              </ng-container>
+              <li *ngIf="currentPageNum+1 < totalPageNum" class="page-item">
+                <a class="page-link" (click)="nextPage()">
+                  <i class="fas fa-angle-right"></i>
+                  <span class="sr-only">Next</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #content let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title heading-small text-muted mb-4" id="modal-basic-title">Create</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body" style="font-size: 13px;">
+    <form role="form" [formGroup]="createEventForm" (ngSubmit)="saveEvent()">
+      <div class="form-group">
+        <div class="row align-items-center">
+          <div class="col-6">
+            <label class="form-control-label" for="eventName">Event Name</label>
+            <input type="text" id="eventName" class="form-control form-control-alternative"
+                   placeholder="Event Name" formControlName="eventName">
+          </div>
+        </div>
+        <div class="row align-items-center" style="margin-top: 5px;">
+          <div class="col-6">
+            <label class="form-control-label" for="frequency">Frequency</label>
+            <input type="text" id="frequency" class="form-control form-control-alternative"
+                   placeholder="Frequency" formControlName="frequency">
+          </div>
+          <div class="col-6">
+            <label class="form-control-label" for="frequencyType">Frequency Type</label>
+            <input type="text" id="frequencyType" class="form-control form-control-alternative"
+                   placeholder="Day, Week, Month, Year" formControlName="frequencyType" [ngbTypeahead]="search">
+          </div>
+        </div>
+        <div class="row align-items-center" style="margin-top: 5px;">
+          <div class="col-6">
+            <label class="form-control-label" for="startDate">Start Date</label>
+            <input type="text" id="startDate" class="form-control form-control-alternative" placeholder="startDate">
+          </div>
+          <div class="col-6">
+            <label class="form-control-label" for="endDate">End Date</label>
+            <input type="text" id="endDate" class="form-control form-control-alternative" placeholder="endDate">
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-sm btn-primary" (click)="saveEvent(); modal.close('Save click')">Save</button>
+  </div>
+</ng-template>
+
+<ng-template #view let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title heading-small text-muted mb-4" id="modal-basic-title">View</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body" style="font-size: 13px;">
+    <div class="form-group">
+      <div class="row align-items-center">
+        <div class="col-6">
+          <label class="form-control-label">Event Name</label>
+          <input type="text" class="form-control form-control-alternative" value="{{viewEvent.name}}">
+        </div>
+      </div>
+      <div class="row align-items-center" style="margin-top: 5px;">
+        <div class="col-6">
+          <label class="form-control-label">Frequency</label>
+          <input type="text" class="form-control form-control-alternative" value="{{viewEvent.frequency}}">
+        </div>
+        <div class="col-6">
+          <label class="form-control-label">Frequency Type</label>
+          <input type="text" class="form-control form-control-alternative" [ngbTypeahead]="search" value="{{viewEvent.frequencyType}}">
+        </div>
+      </div>
+      <div class="row align-items-center" style="margin-top: 5px;">
+        <div class="col-6">
+          <label class="form-control-label">Start Date</label>
+          <input type="text" class="form-control form-control-alternative" value="29-10-2019">
+        </div>
+        <div class="col-6">
+          <label class="form-control-label">End Date</label>
+          <input type="text" class="form-control form-control-alternative" value="29-10-2020">
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
